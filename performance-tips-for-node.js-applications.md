@@ -130,5 +130,20 @@ io.sockets.on('connection', function (socket) {
 </script>
 ```
 
-完整的说明，包括nginx配置，可以查看 [这里](https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/)。
+完整的说明，包括nginx配置，可以查看 [这里](https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/) ，也可以参考[配置 Nginx 反向代理 WebSocket](https://www.hi-linux.com/posts/42176.html) 。
+
+### 执行SSL/TLS和HTTP/2
+
+越来越多的站点开始使用SSL/TLS来提高用户接口的安全性，而nginx也为此提供了两种方案：
+
+1. 如果你使用nginx实现了反向代理，可以在nginx中实现一个SSL/TLS连接到客户端。Node.js服务通过nginx反向代理来回的发送和接收未加密的请求和内容。
+2. 使用  [HTTP/2](https://www.nginx.com/blog/7-tips-for-faster-http2-performance/)，可以极大的抵消使用SSL/TLS所导致的性能开销。
+
+![](.gitbook/assets/nginx_tip5.png)
+
+Nginx 下实现 HTTP/2 服务器推送 \(Server Push\) 可以参考 [这里](https://www.hi-linux.com/posts/9911.html) 。
+
+### 总结
+
+本文介绍了Node.js服务存在的一些缺陷，以及如何通过nginx的结合来实现高性能的应用。我们可以结合自身需要对服务进行改造，以其更好的实现我们的实际需求。
 
