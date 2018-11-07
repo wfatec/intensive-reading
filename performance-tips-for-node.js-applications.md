@@ -84,5 +84,51 @@ location ~ ^/(?:ghost|signout) {
 
 在nginx服务上缓存静态资源文件极大的减轻了Node.js应用服务的负担，让其能够获取更高的性能。
 
+### 实现Node.js负载均衡
 
+提高Node.js应用性能的一个关键就是运行多个服务，并实现这些服务的负载均衡。
+
+Node.js的负载均衡可能会非常棘手，因为Node.js允许运行于浏览器端和服务端的JavaScript代码间的高度交互，并以JSON对象作为交换的媒介。这意味着一个给定的客户端session会在一个特定的服务器上不断运行，并且session持久层本身很难通过多个应用服务器获取。
+
+因此，我们可以通过使用nginx和nginx+来实现多Node.js服务的负载均衡。两者的区别可自行查阅。
+
+### 代理websocket连接
+
+[websocket](https://zh.wikipedia.org/wiki/WebSocket)是一种在单个[TCP](https://zh.wikipedia.org/wiki/TCP)连接上进行[全双工](https://zh.wikipedia.org/wiki/%E5%85%A8%E9%9B%99%E5%B7%A5)通信的协议。 WebSocket使得客户端和服务器之间的数据交换变得更加简单，允许服务端主动向客户端推送数据。在WebSocket API中，浏览器和服务器只需要完成一次握手，两者之间就直接可以创建持久性的连接，并进行双向数据传输。
+
+Node.js通常使用 Socket.IO 来实现websocket服务。但这会使得80端口\(for HTTP\)或者443端口\(for HTTPS\)变得拥挤，解决的方案很接单，就是为 Socket.IO 服务设置代理。
+
+![](.gitbook/assets/nginx_tip4.png)
+
+下面的代码是一个监听5000端口的Node服务。它是作为一个代理服务器而非web服务，并且将请求路由到合适的端口。
+
+```javascript
+var io = require('socket.io').listen(5000);
+
+io.sockets.on('connection', function (socket) {
+  socket.on('set nickname', function (name) {
+    socket.set('nickname', name, function () {
+      socket.emit('ready');
+    });
+  });
+
+  socket.on('msg', function () {
+    socket.get('nickname', function (err, name) {
+      console.log('Chat message by ', name);
+    });
+  });
+});
+```
+
+在index.html文件中，增加如下代码来连接到服务器，并且实例化一个服务器和用户浏览器之间的WebSocket。
+
+```markup
+<script src="/socket.io/socket.io.js"></script>
+<script>// <![CDATA[
+     var socket = io(); // your initialization code here.
+// ]]>
+</script>
+```
+
+完整的说明，包括nginx配置，可以查看 [这里](https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/)。
 
