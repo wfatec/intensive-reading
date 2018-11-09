@@ -159,3 +159,108 @@ ThemedText.contextTypes = {
 }
 ```
 
+完整的可运行程序如下：
+
+```javascript
+const TODOS = ["Get coffee", "Eat cookies"]
+
+class TodoList extends React.PureComponent {
+  render() {
+    return (<ul>
+      {this.props.todos.map(todo => 
+        <li key={todo}><ThemedText>{todo}</ThemedText></li>
+      )}
+    </ul>)
+  }
+}
+
+class App extends React.Component {
+  constructor(p, c) {
+    super(p, c)
+    this.state = { color: "blue" } 
+  }
+
+  render() {
+    return <ThemeProvider color={this.state.color}>
+      <button onClick={this.makeRed.bind(this)}>
+      	<ThemedText>Red please!</ThemedText>
+      </button>
+      <TodoList todos={TODOS} />
+    </ThemeProvider>
+  }
+  
+  makeRed() {
+    this.setState({ color: "red" })
+  }
+}
+
+class Theme {
+  constructor(color) {
+    this.color = color
+    this.subscriptions = []
+  }
+  
+  setColor(color) {
+    this.color = color
+    this.subscriptions.forEach(f => f())
+  }
+
+  subscribe(f) {
+    this.subscriptions.push(f)
+  }
+}
+
+class ThemeProvider extends React.Component {
+  constructor(s, c) {
+    super(s, c)
+    this.theme = new Theme(this.props.color)
+  }
+
+  componentWillReceiveProps(next) {
+    this.theme.setColor(next.color)
+  }
+
+  getChildContext() {
+    return {theme: this.theme}
+  }
+
+  render() {
+    return <div>{this.props.children}</div>
+  }
+}
+ThemeProvider.childContextTypes = {
+  theme: React.PropTypes.object
+}
+
+class ThemedText extends React.Component {
+  componentDidMount() {
+    this.context.theme.subscribe(() => this.forceUpdate())
+  }
+  render() {
+    return <div style={{color: this.context.theme.color}}>
+      {this.props.children}
+    </div>
+  }
+}
+ThemedText.contextTypes = {
+  theme: React.PropTypes.object
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById("container")
+)
+```
+
+此时，虽然还是使用的 _PureComponent_，但是已经能够对颜色变化做i出正确的响应了。Context只在初始化的时候进行了传递，此后的更新动作的传递都是依靠 _Theme_ 本身来完成，而不是创造一个新的context。
+
+![](.gitbook/assets/image%20%282%29.png)
+
+由于使用了监听机制，为防止内存泄漏问题，我们需要在 _componentWillUnmount_ 时手动清除事件监听，并且应该使用 _setState_ 来代替 _forceUpdate_ 。
+
+### 结论
+
+通过将context用作一个依赖注入系统而不是状态容器，我们可以在构建基于context的类库的同时使用 _shouldComponentUpdate_ ，且可以避免发生干扰。谨记如下原则：
+
+_**Context应该在仅被每个组件接收一次的条件下才能使用。**_
+
