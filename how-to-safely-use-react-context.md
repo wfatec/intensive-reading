@@ -92,9 +92,8 @@ ReactDOM.render(
 1. Context应该是不可变的
 2. 组件应该只接收一次context；可以是在初始化的时候
 
-{% hint style="info" %}
 我们不应该将state直接存储在context中。换而言之，我们应该使用context作为一个依赖注入系统。
-{% endhint %}
+
 
 ### 通过基于context的依赖注入进行变更通讯
 
