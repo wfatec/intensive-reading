@@ -6,4 +6,5 @@
 * [How to safely use React context](how-to-safely-use-react-context.md)
 * [Making Sense of React Hooks](making-sense-of-react-hooks.md)
 * [You are managing state? Think twice](you-are-managing-state-think-twice.md)
+* [Comparison of state management solutions for React](comparison-of-state-management-solutions-for-react.md)
 
